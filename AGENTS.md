@@ -1,27 +1,76 @@
-# Repository Guidelines
+# AGENTS.md
 
-Scheduled Service 是一个基于 BullMQ 的定时任务服务，作为基于大模型的端对端语音聊天助手的定时服务工具的前置测试项目。
+> 本文件为 AI 编码代理提供项目上下文和工作指南。参考 [agents.md](https://agents.md/) 规范。
 
 ## Project Overview
 
-本项目旨在为语音聊天助手提供可靠的定时任务调度能力，支持：
-- 定时提醒与通知
-- 周期性任务执行
-- 延迟任务处理
-- 任务状态管理与监控
+Scheduled Service 是一个基于 BullMQ 的定时任务服务，作为基于大模型的端对端语音聊天助手的定时服务工具的前置测试项目。
 
-## Tech Stack
+**核心能力**：
+- ⏰ 定时提醒与通知
+- 🔄 周期性任务执行
+- ⏳ 延迟任务处理
+- 📊 任务状态管理与监控
 
-- **Runtime**: Node.js
-- **Queue System**: BullMQ (基于 Redis)
-- **Language**: TypeScript
-- **Python Environment**: UV (如需 Python 环境)
+## Setup Commands
 
-## Project Structure & Module Organization
+```bash
+# 安装依赖（必须使用 pnpm）
+pnpm install
+
+# 启动 Redis（使用 Docker）
+docker run -d --name redis -p 6379:6379 redis:latest
+
+# 配置环境变量
+cp .env.example .env
+```
+
+## Development Commands
+
+```bash
+# 启动开发服务器
+pnpm dev
+
+# 构建生产版本
+pnpm build
+
+# 运行测试
+pnpm test
+
+# 代码检查
+pnpm lint
+```
+
+## Code Style
+
+- **Language**: TypeScript (strict mode)
+- **Indent**: 2 spaces
+- **Quotes**: Single quotes `'`
+- **Semicolons**: Required
+- **Comments**: 英文为主，中文补充（复杂逻辑可用中文解释）
+
+### Naming Conventions
+
+| 类型 | 风格 | 示例 |
+|------|------|------|
+| 变量/函数 | camelCase | `getUserById`, `isActive` |
+| 类/接口 | PascalCase | `ReminderQueue`, `JobOptions` |
+| 文件名 | kebab-case | `reminder-queue.ts` |
+| 常量 | UPPER_SNAKE | `MAX_RETRY_COUNT` |
+
+## Testing Instructions
+
+- 测试框架：Vitest
+- 测试文件位于 `tests/` 目录
+- 运行单个测试：`pnpm vitest run -t "<test name>"`
+- 提交前必须通过所有测试：`pnpm test`
+- 修改代码时同步更新或添加相关测试
+
+## Project Structure
 
 ```
 scheduled-service/
-├── src/                    # 源代码目录
+├── src/
 │   ├── queues/            # BullMQ 队列定义
 │   ├── workers/           # Worker 处理器
 │   ├── jobs/              # 任务定义
@@ -29,76 +78,39 @@ scheduled-service/
 │   └── index.ts           # 入口文件
 ├── tests/                  # 测试文件
 ├── config/                 # 配置文件
-├── scripts/                # 脚本文件
 ├── AGENTS.md              # Agent 指南（本文件）
-├── package.json           # Node.js 依赖配置
-├── tsconfig.json          # TypeScript 配置
-└── .env.example           # 环境变量示例
+├── package.json
+├── tsconfig.json
+└── .env.example
 ```
 
-## Build, Test, and Development Commands
+## Tech Stack
 
-### Node.js / TypeScript
-- **包管理器**: 使用 pnpm（不要使用 npm 或 yarn）
-- `pnpm install`: 安装项目依赖
-- `pnpm dev`: 启动开发服务器
-- `pnpm build`: 构建生产版本
-- `pnpm test`: 运行测试（使用 vitest）
-- `pnpm lint`: 代码检查
+| 技术 | 用途 |
+|------|------|
+| Node.js | 运行时 |
+| TypeScript | 开发语言 |
+| BullMQ | 任务队列 |
+| Redis | 队列存储 |
+| Vitest | 测试框架 |
+| pnpm | 包管理器 |
+| UV | Python 虚拟环境（如需要） |
 
-### Python (如需要)
-- `uv venv`: 创建虚拟环境
-- `uv pip install -r requirements.txt`: 安装 Python 依赖
-- `uv run python <script.py>`: 在虚拟环境中运行 Python 脚本
+## BullMQ Conventions
 
-### Redis (BullMQ 依赖)
-- 使用 Docker 部署 Redis 服务
-- `docker run -d --name redis -p 6379:6379 redis:latest`: 启动 Redis 容器
-- `docker start redis`: 启动已存在的 Redis 容器
-- `docker stop redis`: 停止 Redis 容器
+### Queue Naming
+- 使用有意义的名称：`reminder-queue`, `notification-queue`
+- 不同任务类型使用不同队列
 
-## Coding Style & Naming Conventions
+### Job Definition
+- Job 数据包含完整上下文
+- 设置合理的重试策略（attempts, backoff）
+- 关键任务设置失败回调
 
-### TypeScript
-- 使用 ESLint + Prettier 进行代码格式化
-- **缩进**: 2 个空格
-- **引号**: 使用单引号 `'`
-- **分号**: 语句末尾使用分号
-- **注释语言**: 英文为主，中文补充（复杂逻辑可用中文解释）
-- 使用 camelCase 命名变量和函数
-- 使用 PascalCase 命名类和接口
-- 文件名使用 kebab-case 或 camelCase
-- 优先使用 async/await 处理异步操作
-- 为函数添加类型注解
-
-### Python
-- 遵循 PEP 8 规范
-- 使用 snake_case 命名变量和函数
-- 使用 PascalCase 命名类
-- 使用 UV 管理虚拟环境
-
-## BullMQ 使用规范
-
-### 队列命名
-- 使用有意义的队列名称，如 `reminder-queue`, `notification-queue`
-- 不同类型的任务使用不同的队列
-
-### Job 定义
-- Job 数据应包含足够的上下文信息
-- 设置合理的重试策略和超时时间
-- 为关键任务设置失败回调
-
-### Worker 实现
-- Worker 应保持幂等性
-- 正确处理任务失败和重试
-- 记录详细的日志信息
-
-## Testing Guidelines
-
-- 测试文件放在 `tests/` 目录下
-- 测试函数以 `test_` 开头（Python）或使用 `describe/it` 模式（TypeScript）
-- 为关键业务逻辑编写单元测试
-- 为队列处理编写集成测试
+### Worker Implementation
+- 保持幂等性
+- 正确处理失败和重试
+- 记录详细日志
 
 ## Git Commit Guidelines
 
